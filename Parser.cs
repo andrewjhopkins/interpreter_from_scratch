@@ -40,7 +40,7 @@ namespace interpreter_from_scratch
             return new InterpreterProgram(statements);
         }
 
-        public Statement ParseStatement()
+        private Statement ParseStatement()
         {
             switch (Lexer.CurrentToken.Type)
             {
@@ -48,12 +48,16 @@ namespace interpreter_from_scratch
                     return ParseVarStatement();
                 case TokenType.RETURN:
                     return ParseReturnStatement();
+                case TokenType.IF:
+                    return ParseIfElseStatement();
+                case TokenType.FUNCTION:
+                    return ParseFunctionStatement();
                 default:
                     return ParseExpressionStatement();
             }
         }
 
-        public Var ParseVarStatement()
+        private Var ParseVarStatement()
         {
             var token = Lexer.CurrentToken;
             ExpectNextToken(TokenType.IDENTIFIER);
@@ -69,7 +73,7 @@ namespace interpreter_from_scratch
             return new Var(token, identifier, value);
         }
 
-        public Return ParseReturnStatement()
+        private Return ParseReturnStatement()
         { 
             var token = Lexer.CurrentToken;
             Lexer.NextToken();
@@ -80,7 +84,85 @@ namespace interpreter_from_scratch
             return new Return(token, value);
         }
 
-        public ExpressionStatement ParseExpressionStatement()
+        private IfElse ParseIfElseStatement()
+        {
+            var token = Lexer.CurrentToken;
+
+            ExpectNextToken(TokenType.LEFTPAREN);
+            Lexer.NextToken();
+
+            var condition = ParseExpression();
+
+            ExpectNextToken(TokenType.RIGHTPAREN);
+
+            ExpectNextToken(TokenType.LEFTBRACE);
+
+            var block = ParseBlockStatement();
+
+            if (Lexer.PeekToken.Type == TokenType.ELSE)
+            {
+                Lexer.NextToken();
+                ExpectNextToken(TokenType.LEFTBRACE);
+
+                var elseBlock = ParseBlockStatement();
+
+                return new IfElse(token, condition, block, elseBlock);
+            }
+
+            return new IfElse(token, condition, block, null);
+        }
+
+        private Function ParseFunctionStatement()
+        { 
+            var token = Lexer.CurrentToken;
+            var functionIdentifier = new Identifier(token);
+
+            ExpectNextToken(TokenType.LEFTPAREN);
+
+            var parameters = new List<Identifier>();
+            while (Lexer.CurrentToken.Type != TokenType.RIGHTPAREN)
+            {
+                Lexer.NextToken();
+                var parameter = new Identifier(Lexer.CurrentToken);
+                parameters.Add(parameter);
+
+                if (Lexer.PeekToken.Type != TokenType.RIGHTPAREN)
+                {
+                    ExpectNextToken(TokenType.COMMA);
+                }
+                else
+                {
+                    Lexer.NextToken();
+                }
+            }
+
+            ExpectNextToken(TokenType.LEFTBRACE);
+            var block = ParseBlockStatement();
+
+            return new Function(token, functionIdentifier, parameters, block);
+        }
+
+        private Block ParseBlockStatement()
+        {
+            var statements = new List<Statement>();
+
+            Lexer.NextToken();
+
+            while (Lexer.CurrentToken.Type != TokenType.RIGHTBRACE)
+            {
+                var statement = ParseStatement();
+                if (statement != null)
+                {
+                    statements.Add(statement);
+                }
+
+                Lexer.NextToken();
+            }
+
+            return new Block(statements);
+        }
+
+        private ExpressionStatement ParseExpressionStatement()
         {
             var token = Lexer.CurrentToken;
             var value = ParseExpression();
@@ -89,7 +171,7 @@ namespace interpreter_from_scratch
             return new ExpressionStatement(token, value);
         }
 
-        public Expression ParseExpression()
+        private Expression ParseExpression()
         {
             var token = Lexer.CurrentToken;
             Expression leftExpression;
@@ -119,7 +201,7 @@ namespace interpreter_from_scratch
             return leftExpression;
         }
 
-        public BinaryExpression ParseBinaryExpression(Expression left)
+        private BinaryExpression ParseBinaryExpression(Expression left)
         { 
             Lexer.NextToken();
 
@@ -131,7 +213,7 @@ namespace interpreter_from_scratch
             return new BinaryExpression(left, operation.Type, right);
         }
 
-        public void ExpectNextToken(TokenType type)
+        private void ExpectNextToken(TokenType type)
         { 
             if (Lexer.PeekToken.Type != type)
             {

@@ -166,5 +166,105 @@ namespace interpreter_from_scratch_test
             var rightInteger = (Integer)binaryExpression.Right;
             Assert.That(rightInteger.Value, Is.EqualTo(right));
         }
+
+        [Test]
+        public void TestParseIfElseStatement()
+        {
+            var input = @"
+                if (x < y) {
+                    return 5 * 5;
+                } else {
+                    return 5 * 10;
+                }
+            ";
+
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            Assert.That(program.Statements.Count, Is.EqualTo(1));
+            var statement = program.Statements.First();
+
+            Assert.That(statement, Is.InstanceOf<IfElse>());
+            var ifElseStatement = (IfElse)statement;
+
+            Assert.That(ifElseStatement.Condition, Is.InstanceOf<BinaryExpression>());
+            var binaryExpression = (BinaryExpression)ifElseStatement.Condition;
+            Assert.That(binaryExpression.Left, Is.InstanceOf<Identifier>());
+            var leftIdentifier = (Identifier)binaryExpression.Left;
+            Assert.That(leftIdentifier.Value, Is.EqualTo("x"));
+
+            Assert.That(binaryExpression.Operation, Is.EqualTo(TokenType.LESSTHAN));
+
+            Assert.That(binaryExpression.Right, Is.InstanceOf<Identifier>());
+            var rightIdentifier = (Identifier)binaryExpression.Right;
+            Assert.That(rightIdentifier.Value, Is.EqualTo("y"));
+
+            Assert.That(ifElseStatement.Consequence.Statements.Count(), Is.EqualTo(1));
+            var consequenceStatement = ifElseStatement.Consequence.Statements.First();
+            Assert.That(consequenceStatement, Is.InstanceOf<Return>());
+            var consequenceReturn = (Return)consequenceStatement;
+            Assert.That(consequenceReturn.Value, Is.InstanceOf<BinaryExpression>());
+
+            var consequenceBinaryExpression = (BinaryExpression)consequenceReturn.Value;
+            Assert.That(consequenceBinaryExpression.Left, Is.InstanceOf<Integer>());
+            var consequenceLeftInteger = (Integer)consequenceBinaryExpression.Left;
+            Assert.That(consequenceLeftInteger.Value, Is.EqualTo(5));
+
+            Assert.That(consequenceBinaryExpression.Right, Is.InstanceOf<Integer>());
+            var consequenceRightInteger = (Integer)consequenceBinaryExpression.Right;
+            Assert.That(consequenceRightInteger.Value, Is.EqualTo(5));
+
+
+            Assert.That(ifElseStatement.Alternative.Statements.Count(), Is.EqualTo(1));
+            var alternativeStatement = ifElseStatement.Alternative.Statements.First();
+            Assert.That(alternativeStatement, Is.InstanceOf<Return>());
+            var alternativeReturn = (Return)alternativeStatement;
+            Assert.That(alternativeReturn.Value, Is.InstanceOf<BinaryExpression>());
+
+            var alternativeBinaryExpression = (BinaryExpression)alternativeReturn.Value;
+            var alternativeLeftInteger = (Integer)alternativeBinaryExpression.Left;
+            Assert.That(alternativeLeftInteger.Value, Is.EqualTo(5));
+
+            Assert.True(alternativeBinaryExpression.Operation == TokenType.ASTERISK);
+
+            var alternativeRightInteger = (Integer)alternativeBinaryExpression.Right;
+            Assert.That(alternativeRightInteger.Value, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void TestParseFunctionStatement()
+        {
+            var input = @"
+                function(x, y) {
+                    var z = x + y;
+                    return z;
+                }
+            ";
+
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            Assert.That(program.Statements.Count, Is.EqualTo(1));
+            var statement = program.Statements.First();
+
+            Assert.That(statement, Is.InstanceOf<Function>());
+            var functionStatement = (Function)statement;
+
+            Assert.That(functionStatement.Parameters.Count, Is.EqualTo(2));
+            var firstParameter = functionStatement.Parameters.First();
+            Assert.That(firstParameter.Value, Is.EqualTo("x"));
+            var secondParameter = functionStatement.Parameters.Last();
+            Assert.That(secondParameter.Value, Is.EqualTo("y"));
+
+            var functionBodyStatements = functionStatement.Body.Statements;
+
+            var firstStatement = functionBodyStatements.First();
+            Assert.That(firstStatement, Is.InstanceOf<Var>());
+
+            var secondStatement = functionBodyStatements.Last();
+            Assert.That(secondStatement, Is.InstanceOf<Return>());
+        }
     }
 }
