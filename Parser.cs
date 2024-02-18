@@ -155,6 +155,7 @@ namespace interpreter_from_scratch
         private IEnumerable<Expression> ParseFunctionCallParameters()
         {
             var parameters = new List<Expression>();
+            Lexer.NextToken();
 
             while (Lexer.CurrentToken.Type != TokenType.RIGHTPAREN)
             {

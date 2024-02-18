@@ -270,7 +270,7 @@ namespace interpreter_from_scratch_test
         [Test]
         public void TestParseFunctionCall()
         {
-            var input = "add(x, y, 2, true)";
+            var input = "add(x, y, 2, true);";
 
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -285,8 +285,31 @@ namespace interpreter_from_scratch_test
             Assert.That(expressionStatement.Expression, Is.InstanceOf<FunctionCall>());
             var functionCall = (FunctionCall)expressionStatement.Expression;
 
-            Assert.That(functionCall.Function, Is.InstanceOf<Expression>());
+            Assert.That(functionCall.Function, Is.InstanceOf<Identifier>());
+            var functionCallIdentifier = (Identifier)functionCall.Function;
+            Assert.That(functionCallIdentifier.Value, Is.EqualTo("add"));
 
+            Assert.That(functionCall.Parameters.Count, Is.EqualTo(4));
+
+            var firstParameter = functionCall.Parameters.ElementAt(0);
+            Assert.That(firstParameter, Is.InstanceOf<Identifier>());
+            var identifierParameter = (Identifier)firstParameter;
+            Assert.That(identifierParameter.Value, Is.EqualTo("x"));
+
+            var secondParameter = functionCall.Parameters.ElementAt(1);
+            Assert.That(secondParameter, Is.InstanceOf<Identifier>());
+            var identifierParameter2 = (Identifier)secondParameter;
+            Assert.That(identifierParameter2.Value, Is.EqualTo("y"));
+
+            var thirdParameter = functionCall.Parameters.ElementAt(2);
+            Assert.That(thirdParameter, Is.InstanceOf<Integer>());
+            var integerParameter = (Integer)thirdParameter;
+            Assert.That(integerParameter.Value, Is.EqualTo(2));
+
+            var fourthParameter = functionCall.Parameters.ElementAt(3);
+            Assert.That(fourthParameter, Is.InstanceOf<Bool>());
+            var booleanParameter = (Bool)fourthParameter;
+            Assert.That(booleanParameter.Value, Is.EqualTo(true));
         }
     }
 }
