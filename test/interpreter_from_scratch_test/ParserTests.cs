@@ -266,5 +266,27 @@ namespace interpreter_from_scratch_test
             var secondStatement = functionBodyStatements.Last();
             Assert.That(secondStatement, Is.InstanceOf<Return>());
         }
+
+        [Test]
+        public void TestParseFunctionCall()
+        {
+            var input = "add(x, y, 2, true)";
+
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            Assert.That(program.Statements.Count, Is.EqualTo(1));
+            var statement = program.Statements.First();
+
+            Assert.That(statement, Is.InstanceOf<ExpressionStatement>());
+            var expressionStatement = (ExpressionStatement)statement;
+
+            Assert.That(expressionStatement.Expression, Is.InstanceOf<FunctionCall>());
+            var functionCall = (FunctionCall)expressionStatement.Expression;
+
+            Assert.That(functionCall.Function, Is.InstanceOf<Expression>());
+
+        }
     }
 }

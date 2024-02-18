@@ -142,6 +142,35 @@ namespace interpreter_from_scratch
             return new Function(token, functionIdentifier, parameters, block);
         }
 
+        private FunctionCall ParseFunctionCall(Identifier identifier)
+        {
+            return new FunctionCall
+            {
+                Function = identifier,
+                Token = Lexer.CurrentToken,
+                Parameters = ParseFunctionCallParameters()
+            };
+        }
+
+        private IEnumerable<Expression> ParseFunctionCallParameters()
+        {
+            var parameters = new List<Expression>();
+
+            while (Lexer.CurrentToken.Type != TokenType.RIGHTPAREN)
+            {
+                var parameter = ParseExpression();
+                parameters.Add(parameter);
+
+                if (Lexer.PeekToken.Type != TokenType.RIGHTPAREN)
+                {
+                    ExpectNextToken(TokenType.COMMA);
+                }
+                Lexer.NextToken();
+            }
+
+            return parameters;
+        }
+
         private Block ParseBlockStatement()
         {
             var statements = new List<Statement>();
@@ -179,7 +208,18 @@ namespace interpreter_from_scratch
             switch (token.Type)
             { 
                 case TokenType.IDENTIFIER:
-                    leftExpression = new Identifier(token);
+                    var identifier = new Identifier(token);
+
+                    if (Lexer.PeekToken.Type == TokenType.LEFTPAREN)
+                    {
+                        Lexer.NextToken();
+                        leftExpression = ParseFunctionCall(identifier);
+                    }
+                    else
+                    {
+                        leftExpression = identifier;
+                    }
+
                     break;
                 case TokenType.INTEGER:
                     leftExpression = new Integer(token, int.Parse(token.Literal));
