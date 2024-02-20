@@ -5,15 +5,6 @@ namespace interpreter_from_scratch;
 
 public class Evaluator
 {
-    private readonly HashSet<TokenType> _integerOnlyOperators = new HashSet<TokenType>{ 
-        TokenType.ASTERISK, 
-        TokenType.PLUS, 
-        TokenType.MINUS, 
-        TokenType.SLASH ,
-        TokenType.GREATERTHAN,
-        TokenType.LESSTHAN
-    };
-    
     public InterpreterObject Evaluate(InterpreterProgram program)
     {
         InterpreterObject result = null;
@@ -32,6 +23,8 @@ public class Evaluator
         {
             case ExpressionStatement expressionStatement:
                return Evaluate(expressionStatement.Expression);
+            default:
+                return null;
         }
     }
 
@@ -44,33 +37,42 @@ public class Evaluator
             case Bool boolean:
                 return new BoolObject(boolean.Value);
             case BinaryExpression binaryExpression:
-
-            /*
-            case Identifier identifier:
-            case FunctionCall functionCall:
-            case BinaryExpression binaryExpression:
-            */
+                return EvaluateBinaryExpression(binaryExpression);
+            default:
+                return null;
         }
     }
 
     public InterpreterObject EvaluateBinaryExpression(BinaryExpression expression)
     {
-        if (_integerOnlyOperators.Contains(expression.Operation) && (expression.Left is not Integer || expression.Right is not Integer))
+        if (expression.Left is not Integer || expression.Right is not Integer)
         {
-            throw new Exception($"Only integers are capable of binary expression with the selected operator {expression.Operation}. Got {expression.Left.GetType()}, {expression.Right.GetType()}");
+            throw new Exception($"Only integers are capable of binary expressions. Got {expression.Left.GetType()}, {expression.Right.GetType()}");
         }
+
+        var left = (Integer)expression.Left;
+        var right = (Integer)expression.Right;
 
         switch(expression.Operation)
         {
             case TokenType.PLUS:
-                // var left = (Integer)expression.Left;
-                var right = (Integer)expression.Right;
-                return new IntegerObject(((Integer)expression.Left).Value + right.Value);
+                return new IntegerObject(left.Value + right.Value);
             case TokenType.MINUS:
+                return new IntegerObject(left.Value - right.Value);
             case TokenType.ASTERISK:
+                return new IntegerObject(left.Value * right.Value);
             case TokenType.SLASH:
-
+                return new IntegerObject(left.Value / right.Value);
+            case TokenType.GREATERTHAN:
+                return new BoolObject(left.Value > right.Value);
+            case TokenType.LESSTHAN:
+                return new BoolObject(left.Value < right.Value);
+            case TokenType.EQUALS:
+                return new BoolObject(left.Value == right.Value);
+            case TokenType.DOESNOTEQUAL:
+                return new BoolObject(left.Value != right.Value);
+            default:
+                return null;
         }
-
     }
 }
