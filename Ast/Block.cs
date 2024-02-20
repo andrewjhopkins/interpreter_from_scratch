@@ -1,6 +1,6 @@
 ﻿namespace interpreter_from_scratch.Ast
 {
-    public class Block
+    public class Block : Statement
     {
         public IEnumerable<Statement> Statements { get; set; }
 

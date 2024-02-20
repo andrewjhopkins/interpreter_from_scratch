@@ -5,30 +5,41 @@ namespace interpreter_from_scratch;
 
 public class Evaluator
 {
-    public InterpreterObject Evaluate(InterpreterProgram program)
+    public InterpreterObject Evaluate(InterpreterProgram program, EnvironmentVariables environmentVariables)
     {
         InterpreterObject result = null;
 
         for (var i = 0; i < program.Statements.Count(); i++)
         {
-            result = Evaluate(program.Statements.ElementAt(i));
+            result = Evaluate(program.Statements.ElementAt(i), environmentVariables);
         }
 
         return result;
     }
 
-    public InterpreterObject Evaluate(Statement statement)
+    public InterpreterObject Evaluate(Statement statement, EnvironmentVariables environmentVariables)
     {
         switch (statement)
         {
             case ExpressionStatement expressionStatement:
-               return Evaluate(expressionStatement.Expression);
+               return Evaluate(expressionStatement.Expression, environmentVariables);
+            case Var varStatement:
+                var value = Evaluate(varStatement.Value, environmentVariables);
+                environmentVariables.Variables.Add(varStatement.Identifier.Value, value);
+                break;
+            case Return returnStatement:
+                var returnValue = Evaluate(returnStatement.Value, environmentVariables);
+                return new ReturnObject(returnValue);
+            case Block blockStatement:
+                return EvaluateBlock(blockStatement, environmentVariables);
             default:
                 return null;
         }
+
+        return null;
     }
 
-    public InterpreterObject Evaluate(Expression expression)
+    public InterpreterObject Evaluate(Expression expression, EnvironmentVariables environmentVariables)
     {
         switch(expression)
         {
@@ -37,42 +48,72 @@ public class Evaluator
             case Bool boolean:
                 return new BoolObject(boolean.Value);
             case BinaryExpression binaryExpression:
-                return EvaluateBinaryExpression(binaryExpression);
+                var left = Evaluate(binaryExpression.Left, environmentVariables);
+                var right = Evaluate(binaryExpression.Right, environmentVariables);
+                return EvaluateBinaryExpression(left, right, binaryExpression.Operation);
+            case Identifier identifier:
+                return EvaluateIdentifier(identifier, environmentVariables);
             default:
                 return null;
         }
     }
 
-    public InterpreterObject EvaluateBinaryExpression(BinaryExpression expression)
+    private InterpreterObject EvaluateBinaryExpression(InterpreterObject left, InterpreterObject right, TokenType operation)
     {
-        if (expression.Left is not Integer || expression.Right is not Integer)
+        if (left is not IntegerObject || right is not IntegerObject)
         {
-            throw new Exception($"Only integers are capable of binary expressions. Got {expression.Left.GetType()}, {expression.Right.GetType()}");
+            throw new Exception($"Only integers are capable of binary expressions. Got {left.GetType()}, {right.GetType()}");
         }
 
-        var left = (Integer)expression.Left;
-        var right = (Integer)expression.Right;
+        var leftIneger = (IntegerObject)left;
+        var rightInteger = (IntegerObject)right;
 
-        switch(expression.Operation)
+        switch(operation)
         {
             case TokenType.PLUS:
-                return new IntegerObject(left.Value + right.Value);
+                return new IntegerObject(leftIneger.Value + rightInteger.Value);
             case TokenType.MINUS:
-                return new IntegerObject(left.Value - right.Value);
+                return new IntegerObject(leftIneger.Value - rightInteger.Value);
             case TokenType.ASTERISK:
-                return new IntegerObject(left.Value * right.Value);
+                return new IntegerObject(leftIneger.Value * rightInteger.Value);
             case TokenType.SLASH:
-                return new IntegerObject(left.Value / right.Value);
+                return new IntegerObject(leftIneger.Value / rightInteger.Value);
             case TokenType.GREATERTHAN:
-                return new BoolObject(left.Value > right.Value);
+                return new BoolObject(leftIneger.Value > rightInteger.Value);
             case TokenType.LESSTHAN:
-                return new BoolObject(left.Value < right.Value);
+                return new BoolObject(leftIneger.Value < rightInteger.Value);
             case TokenType.EQUALS:
-                return new BoolObject(left.Value == right.Value);
+                return new BoolObject(leftIneger.Value == rightInteger.Value);
             case TokenType.DOESNOTEQUAL:
-                return new BoolObject(left.Value != right.Value);
+                return new BoolObject(leftIneger.Value != rightInteger.Value);
             default:
                 return null;
         }
+    }
+
+    private InterpreterObject EvaluateIdentifier(Identifier identifier, EnvironmentVariables environmentVariables)
+    {
+        if (environmentVariables.Variables.ContainsKey(identifier.Value))
+        {
+            return environmentVariables.Variables[identifier.Value];
+        }
+
+        throw new Exception($"Identifier {identifier.Value} not found");
+    }
+
+    private InterpreterObject EvaluateBlock(Block block, EnvironmentVariables environmentVariables) 
+    {
+        InterpreterObject result = null;
+
+        for (var i = 0; i < block.Statements.Count(); i++)
+        {
+            result = Evaluate(block.Statements.ElementAt(i), environmentVariables);
+            if (result != null && result.Type == InterpreterObjectType.RETURNVALUE)
+            {
+                return result;
+            }
+        }
+
+        return result;
     }
 }
