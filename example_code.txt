@@ -1,0 +1,13 @@
+var x = 5;
+var y = 6;
+
+function greaterThanTen(value) {
+   if (value > 10) {
+      return true;
+   }
+   else {
+      return false;
+   }
+}
+
+greaterThanTen(x + y);

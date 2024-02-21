@@ -87,6 +87,16 @@ public class Evaluator
 
     private InterpreterObject EvaluateBinaryExpression(InterpreterObject left, InterpreterObject right, TokenType operation)
     {
+        if (left is ReturnObject leftReturnObject)
+        {
+            left = leftReturnObject.Value;
+        }
+
+        if (right is ReturnObject rightReturnObject)
+        {
+            right = rightReturnObject.Value;
+        }
+
         if (left is not IntegerObject || right is not IntegerObject)
         {
             throw new Exception($"Only integers are capable of binary expressions. Got {left.GetType()}, {right.GetType()}");
