@@ -142,6 +142,12 @@ namespace interpreter_from_scratch
             ExpectNextToken(TokenType.LEFTBRACE);
             var block = ParseBlockStatement();
 
+            // Let the user optionally add a semicolon at the end of the function declaration
+            if (Lexer.PeekToken.Type == TokenType.SEMICOLON)
+            {
+                Lexer.NextToken();
+            }
+
             return new Function(token, functionIdentifier, parameters, block);
         }
 

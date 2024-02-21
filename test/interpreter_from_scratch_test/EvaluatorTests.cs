@@ -267,7 +267,7 @@ namespace interpreter_from_scratch_test
         [Test]
         public void TestEvaluateFunctionStatement()
         {
-            var input = "function(x, y, z) { return x; }";
+            var input = "function test(x, y, z) { return x; }";
 
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
@@ -275,10 +275,12 @@ namespace interpreter_from_scratch_test
             var program = parser.ParseProgram();
 
             var evaluator = new Evaluator();
-            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+            evaluator.Evaluate(program, environmentVariables);
 
-            Assert.IsInstanceOf<FunctionObject>(interpreterObject);
-            var functionObject = (FunctionObject)interpreterObject;
+            Assert.IsTrue(environmentVariables.Variables.ContainsKey("test"));
+
+            Assert.IsInstanceOf<FunctionObject>(environmentVariables.Variables["test"]);
+            var functionObject = (FunctionObject)environmentVariables.Variables["test"];
 
             Assert.That(functionObject.Parameters.Count(), Is.EqualTo(3));
         }
@@ -306,6 +308,7 @@ namespace interpreter_from_scratch_test
         }
 
         [TestCase("function test(x) { return true; } test(5);", true)]
+        [TestCase("function test(x) { return true; }; test(5);", true)]
         [TestCase("function test(x, y) { return false; } test(5, 3);", false)]
         public void TestEvaluateFunctionCallReturnsBoolean(string input, bool value)
         { 
