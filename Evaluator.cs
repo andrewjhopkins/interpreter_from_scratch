@@ -30,6 +30,8 @@ public class Evaluator
             case Return returnStatement:
                 var returnValue = Evaluate(returnStatement.Value, environmentVariables);
                 return new ReturnObject(returnValue);
+            case IfElse ifElseStatement:
+                return EvaluateIfElse(ifElseStatement, environmentVariables);
             case Block blockStatement:
                 return EvaluateBlock(blockStatement, environmentVariables);
             default:
@@ -99,6 +101,29 @@ public class Evaluator
         }
 
         throw new Exception($"Identifier {identifier.Value} not found");
+    }
+
+    private InterpreterObject EvaluateIfElse(IfElse ifElse, EnvironmentVariables environmentVariables)
+    {
+        var condition = Evaluate(ifElse.Condition, environmentVariables);
+
+        if (condition is not BoolObject)
+        {
+            throw new Exception($"Condition must be a boolean. Got {condition.GetType()}");
+        }
+
+        var boolCondition = (BoolObject)condition;
+
+        if (boolCondition.Value)
+        {
+            return Evaluate(ifElse.Consequence, environmentVariables);
+        }
+        else if (ifElse.Alternative != null)
+        {
+            return Evaluate(ifElse.Alternative, environmentVariables);
+        }
+
+        return null;
     }
 
     private InterpreterObject EvaluateBlock(Block block, EnvironmentVariables environmentVariables) 

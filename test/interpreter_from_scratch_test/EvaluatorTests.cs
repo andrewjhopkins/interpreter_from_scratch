@@ -179,5 +179,88 @@ namespace interpreter_from_scratch_test
 
             Assert.That(boolObject.Value, Is.EqualTo(value));
         }
+
+        [TestCase("if (true) { 10; }", 10)]
+        [TestCase("if (false) { 10; } else { 15; }", 15)]
+        public void TestEvaluateIfElseReturnInteger(string input, int value)
+        { 
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<IntegerObject>(interpreterObject);
+            var integerObject = (IntegerObject)interpreterObject;
+
+            Assert.That(integerObject.Value, Is.EqualTo(value));
+        }
+
+        [TestCase("if (2 > 1) { 10; return 15; }", 15)]
+        [TestCase("if (1 < 2) { return 15; 10; }", 15)]
+        [TestCase("if (1 > 2) { return 15; } else { return 10; }", 10)]
+        [TestCase("if (1 > 2) { return 15; } else { return 10; 15; }", 10)]
+        public void TestEvaluateIfElseReturnIntegerWithReturn(string input, int value)
+        { 
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<ReturnObject>(interpreterObject);
+            var returnObject = (ReturnObject)interpreterObject;
+
+            Assert.IsInstanceOf<IntegerObject>(returnObject.Value);
+            var integerObject = (IntegerObject)returnObject.Value;
+
+            Assert.That(integerObject.Value, Is.EqualTo(value));
+        }
+
+
+        [TestCase("if (true) { true; }", true)]
+        [TestCase("if (false) { true; } else { false; }", false)]
+        public void TestEvaluateIfElseReturnBoolean(string input, bool value)
+        { 
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+            
+            Assert.IsInstanceOf<BoolObject>(interpreterObject);
+            var boolObject = (BoolObject)interpreterObject;
+
+            Assert.That(boolObject.Value, Is.EqualTo(value));
+        }
+
+        [TestCase("if (true) { false; return true;}", true)]
+        [TestCase("if (true) { return true; false;}", true)]
+        [TestCase("if (false) { return true; } else { return false; }", false)]
+        [TestCase("if (false) { return true; } else { true; return false; }", false)]
+        public void TestEvaluateIfElseReturnBooleanWithReturnStatement(string input, bool value)
+        { 
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<ReturnObject>(interpreterObject);
+            var returnObject = (ReturnObject)interpreterObject;
+            
+            Assert.IsInstanceOf<BoolObject>(returnObject.Value);
+            var boolObject = (BoolObject)returnObject.Value;
+
+            Assert.That(boolObject.Value, Is.EqualTo(value));
+        }
     }
 }
