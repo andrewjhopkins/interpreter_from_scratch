@@ -115,7 +115,10 @@ namespace interpreter_from_scratch
         private Function ParseFunctionStatement()
         { 
             var token = Lexer.CurrentToken;
-            var functionIdentifier = new Identifier(token);
+            Lexer.NextToken();
+
+            var identifierToken = Lexer.CurrentToken;
+            var functionIdentifier = new Identifier(identifierToken);
 
             ExpectNextToken(TokenType.LEFTPAREN);
 

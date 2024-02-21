@@ -236,7 +236,7 @@ namespace interpreter_from_scratch_test
         public void TestParseFunctionStatement()
         {
             var input = @"
-                function(x, y) {
+                function test(x, y) {
                     var z = x + y;
                     return z;
                 }
@@ -251,6 +251,8 @@ namespace interpreter_from_scratch_test
 
             Assert.That(statement, Is.InstanceOf<Function>());
             var functionStatement = (Function)statement;
+
+            Assert.That(functionStatement.Identifier.Value, Is.EqualTo("test"));
 
             Assert.That(functionStatement.Parameters.Count, Is.EqualTo(2));
             var firstParameter = functionStatement.Parameters.First();

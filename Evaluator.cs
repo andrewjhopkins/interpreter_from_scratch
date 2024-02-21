@@ -32,6 +32,9 @@ public class Evaluator
                 return new ReturnObject(returnValue);
             case IfElse ifElseStatement:
                 return EvaluateIfElse(ifElseStatement, environmentVariables);
+            case Function functionStatement:
+                environmentVariables.Variables.Add(functionStatement.Identifier.Value, new FunctionObject(functionStatement.Body, functionStatement.Parameters, environmentVariables));
+                break;
             case Block blockStatement:
                 return EvaluateBlock(blockStatement, environmentVariables);
             default:
@@ -53,11 +56,33 @@ public class Evaluator
                 var left = Evaluate(binaryExpression.Left, environmentVariables);
                 var right = Evaluate(binaryExpression.Right, environmentVariables);
                 return EvaluateBinaryExpression(left, right, binaryExpression.Operation);
+            case FunctionCall functionCall:
+                var function = Evaluate(functionCall.Function, environmentVariables);
+                var parameters = Evaluate(functionCall.Parameters, environmentVariables);
+                if (function is FunctionObject functionObject)
+                {
+                    return ApplyFunction(functionObject, parameters);
+                }
+
+                throw new Exception($"Expected a function. Got {function.Type}");
+
             case Identifier identifier:
                 return EvaluateIdentifier(identifier, environmentVariables);
             default:
                 return null;
         }
+    }
+
+    public IEnumerable<InterpreterObject> Evaluate(IEnumerable<Expression> expressions, EnvironmentVariables environmentVariables)
+    {
+        var result = new List<InterpreterObject>();
+
+        foreach (var expression in expressions)
+        {
+            result.Add(Evaluate(expression, environmentVariables));
+        }
+
+        return result;
     }
 
     private InterpreterObject EvaluateBinaryExpression(InterpreterObject left, InterpreterObject right, TokenType operation)
@@ -140,5 +165,23 @@ public class Evaluator
         }
 
         return result;
+    }
+
+    private InterpreterObject ApplyFunction(FunctionObject function, IEnumerable<InterpreterObject> parameters)
+    {
+        if (function.Parameters.Count() != parameters.Count())
+        {
+            throw new Exception($"Expected {function.Parameters.Count()} parameters. Got {parameters.Count()}");
+        }
+
+        var extendedEnvironment = new EnvironmentVariables(function.EnvironmentVariables);
+
+        for (var i = 0; i < function.Parameters.Count(); i++)
+        {
+            extendedEnvironment.Variables.Add(function.Parameters.ElementAt(i).Value, parameters.ElementAt(i));
+        }
+
+        var evaluator = new Evaluator();
+        return evaluator.Evaluate(function.Body, extendedEnvironment);
     }
 }

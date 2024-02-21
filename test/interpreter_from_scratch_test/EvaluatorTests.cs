@@ -1,5 +1,6 @@
 ﻿using interpreter_from_scratch;
 using interpreter_from_scratch.Evaluation;
+using System.Security.Cryptography.X509Certificates;
 
 namespace interpreter_from_scratch_test
 {
@@ -26,7 +27,7 @@ namespace interpreter_from_scratch_test
         [TestCase("true;", true)]
         [TestCase("false;", false)]
         public void TestEvaluateBooleanExpression(string input, bool value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -47,7 +48,7 @@ namespace interpreter_from_scratch_test
         [TestCase("1092 - 53;", 1039)]
         [TestCase("var test = 1092; var testing = 53; test - testing;", 1039)]
         public void TestEvaluateBinaryExpressionReturnsIntegerObject(string input, int value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -70,7 +71,7 @@ namespace interpreter_from_scratch_test
         [TestCase("var test = 5; var testing = 5; test == testing;", true)]
         [TestCase("var test = 5; var testing = 5; test != testing;", false)]
         public void TestEvaluateBinaryExpressionReturnsBooleanObject(string input, bool value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -90,7 +91,7 @@ namespace interpreter_from_scratch_test
         [TestCase("false - 3;")]
         [TestCase("3 == false;")]
         public void TestEvaluateBinaryExpressionIfBothNotIntegersThrow(string input)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -103,7 +104,7 @@ namespace interpreter_from_scratch_test
         [TestCase("var test = 3;", "test", 3)]
         [TestCase("var testing = 192;", "testing", 192)]
         public void TestEvaluateVarWithValueInteger(string input, string identifier, int value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -183,7 +184,7 @@ namespace interpreter_from_scratch_test
         [TestCase("if (true) { 10; }", 10)]
         [TestCase("if (false) { 10; } else { 15; }", 15)]
         public void TestEvaluateIfElseReturnInteger(string input, int value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -203,7 +204,7 @@ namespace interpreter_from_scratch_test
         [TestCase("if (1 > 2) { return 15; } else { return 10; }", 10)]
         [TestCase("if (1 > 2) { return 15; } else { return 10; 15; }", 10)]
         public void TestEvaluateIfElseReturnIntegerWithReturn(string input, int value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -225,7 +226,7 @@ namespace interpreter_from_scratch_test
         [TestCase("if (true) { true; }", true)]
         [TestCase("if (false) { true; } else { false; }", false)]
         public void TestEvaluateIfElseReturnBoolean(string input, bool value)
-        { 
+        {
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
@@ -233,7 +234,7 @@ namespace interpreter_from_scratch_test
 
             var evaluator = new Evaluator();
             var interpreterObject = evaluator.Evaluate(program, environmentVariables);
-            
+
             Assert.IsInstanceOf<BoolObject>(interpreterObject);
             var boolObject = (BoolObject)interpreterObject;
 
@@ -245,6 +246,47 @@ namespace interpreter_from_scratch_test
         [TestCase("if (false) { return true; } else { return false; }", false)]
         [TestCase("if (false) { return true; } else { true; return false; }", false)]
         public void TestEvaluateIfElseReturnBooleanWithReturnStatement(string input, bool value)
+        {
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<ReturnObject>(interpreterObject);
+            var returnObject = (ReturnObject)interpreterObject;
+
+            Assert.IsInstanceOf<BoolObject>(returnObject.Value);
+            var boolObject = (BoolObject)returnObject.Value;
+
+            Assert.That(boolObject.Value, Is.EqualTo(value));
+        }
+
+        [Test]
+        public void TestEvaluateFunctionStatement()
+        {
+            var input = "function(x, y, z) { return x; }";
+
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<FunctionObject>(interpreterObject);
+            var functionObject = (FunctionObject)interpreterObject;
+
+            Assert.That(functionObject.Parameters.Count(), Is.EqualTo(3));
+        }
+
+        [TestCase("function test(x) { return x; } test(5);", 5)]
+        [TestCase("function test(x, y) { return x + y; } test(5, 3);", 8)]
+        [TestCase("function test(x, y) { var z = x + y; return z; } test(5, 3);", 8)]
+        public void TestEvaluateFunctionCallReturnsInteger(string input, int value)
         { 
             var environmentVariables = new EnvironmentVariables();
             var lexer = new Lexer(input);
@@ -256,7 +298,28 @@ namespace interpreter_from_scratch_test
 
             Assert.IsInstanceOf<ReturnObject>(interpreterObject);
             var returnObject = (ReturnObject)interpreterObject;
-            
+
+            Assert.IsInstanceOf<IntegerObject>(returnObject.Value);
+            var integerObject = (IntegerObject)returnObject.Value;
+
+            Assert.That(integerObject.Value, Is.EqualTo(value));
+        }
+
+        [TestCase("function test(x) { return true; } test(5);", true)]
+        [TestCase("function test(x, y) { return false; } test(5, 3);", false)]
+        public void TestEvaluateFunctionCallReturnsBoolean(string input, bool value)
+        { 
+            var environmentVariables = new EnvironmentVariables();
+            var lexer = new Lexer(input);
+            var parser = new Parser(lexer);
+            var program = parser.ParseProgram();
+
+            var evaluator = new Evaluator();
+            var interpreterObject = evaluator.Evaluate(program, environmentVariables);
+
+            Assert.IsInstanceOf<ReturnObject>(interpreterObject);
+            var returnObject = (ReturnObject)interpreterObject;
+
             Assert.IsInstanceOf<BoolObject>(returnObject.Value);
             var boolObject = (BoolObject)returnObject.Value;
 
