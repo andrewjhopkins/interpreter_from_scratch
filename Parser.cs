@@ -153,12 +153,8 @@ namespace interpreter_from_scratch
 
         private FunctionCall ParseFunctionCall(Identifier identifier)
         {
-            return new FunctionCall
-            {
-                Function = identifier,
-                Token = Lexer.CurrentToken,
-                Parameters = ParseFunctionCallParameters()
-            };
+            var token = Lexer.CurrentToken;
+            return new FunctionCall(token, identifier, ParseFunctionCallParameters());
         }
 
         private IEnumerable<Expression> ParseFunctionCallParameters()
@@ -239,8 +235,7 @@ namespace interpreter_from_scratch
                     leftExpression =  new Bool(token, token.Type == TokenType.TRUE);
                     break; 
                 default:
-                    leftExpression = null;
-                    break;
+                    return null;
             }
 
             if (_binaryOperations.Contains(Lexer.PeekToken.Type))

@@ -2,7 +2,7 @@ using interpreter_from_scratch;
 
 namespace interpreter_from_scratch_test
 {
-    public class Tests
+    public class LexerTests 
     {
         [SetUp]
         public void Setup()

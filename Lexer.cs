@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Tracing;
-
-namespace interpreter_from_scratch
+﻿namespace interpreter_from_scratch
 {
     public class Lexer
     {
