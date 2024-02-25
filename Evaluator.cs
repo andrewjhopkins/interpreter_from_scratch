@@ -17,7 +17,7 @@ public class Evaluator
         return result;
     }
 
-    public InterpreterObject Evaluate(Statement statement, EnvironmentVariables environmentVariables)
+    private InterpreterObject Evaluate(Statement statement, EnvironmentVariables environmentVariables)
     {
         switch (statement)
         {
@@ -44,7 +44,7 @@ public class Evaluator
         return null;
     }
 
-    public InterpreterObject Evaluate(Expression expression, EnvironmentVariables environmentVariables)
+    private InterpreterObject Evaluate(Expression expression, EnvironmentVariables environmentVariables)
     {
         switch(expression)
         {
@@ -65,7 +65,6 @@ public class Evaluator
                 }
 
                 throw new Exception($"Expected a function. Got {function.Type}");
-
             case Identifier identifier:
                 return EvaluateIdentifier(identifier, environmentVariables);
             default:
@@ -73,7 +72,7 @@ public class Evaluator
         }
     }
 
-    public IEnumerable<InterpreterObject> Evaluate(IEnumerable<Expression> expressions, EnvironmentVariables environmentVariables)
+    private IEnumerable<InterpreterObject> Evaluate(IEnumerable<Expression> expressions, EnvironmentVariables environmentVariables)
     {
         var result = new List<InterpreterObject>();
 
@@ -130,12 +129,14 @@ public class Evaluator
 
     private InterpreterObject EvaluateIdentifier(Identifier identifier, EnvironmentVariables environmentVariables)
     {
-        if (environmentVariables.Variables.ContainsKey(identifier.Value))
-        {
-            return environmentVariables.Variables[identifier.Value];
+        var value = environmentVariables.Get(identifier.Value);
+
+        if (value == null)
+        { 
+            throw new Exception($"Identifier {identifier.Value} not found");
         }
 
-        throw new Exception($"Identifier {identifier.Value} not found");
+        return value;
     }
 
     private InterpreterObject EvaluateIfElse(IfElse ifElse, EnvironmentVariables environmentVariables)

@@ -1,5 +1,4 @@
 ﻿using interpreter_from_scratch.Evaluation;
-
 namespace interpreter_from_scratch;
 
 public class Program

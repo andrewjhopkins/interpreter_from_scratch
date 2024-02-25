@@ -1,4 +1,3 @@
-
 namespace interpreter_from_scratch.Evaluation;
 
 public class BoolObject : InterpreterObject

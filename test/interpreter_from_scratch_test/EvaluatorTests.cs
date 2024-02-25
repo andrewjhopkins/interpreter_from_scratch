@@ -1,6 +1,5 @@
 ﻿using interpreter_from_scratch;
 using interpreter_from_scratch.Evaluation;
-using System.Security.Cryptography.X509Certificates;
 
 namespace interpreter_from_scratch_test
 {

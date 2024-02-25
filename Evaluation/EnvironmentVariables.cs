@@ -1,19 +1,33 @@
-﻿namespace interpreter_from_scratch.Evaluation
+﻿namespace interpreter_from_scratch.Evaluation;
+
+public class EnvironmentVariables
 {
-    public class EnvironmentVariables
+    public Dictionary<string, InterpreterObject> Variables = new Dictionary<string, InterpreterObject>();
+    public EnvironmentVariables OuterEnvironment = null;
+
+    public EnvironmentVariables()
     {
-        public Dictionary<string, InterpreterObject> Variables = new Dictionary<string, InterpreterObject>();
-        public EnvironmentVariables OuterEnvironment = null;
+        Variables = new Dictionary<string, InterpreterObject>();
+    }
 
-        public EnvironmentVariables()
+    public EnvironmentVariables(EnvironmentVariables outer)
+    {
+        Variables = new Dictionary<string, InterpreterObject>();
+        OuterEnvironment = outer;
+    }
+
+    public InterpreterObject Get(string key)
+    {
+        if (Variables.ContainsKey(key)) 
         {
-            Variables = new Dictionary<string, InterpreterObject>();
+            return Variables[key];
         }
 
-        public EnvironmentVariables(EnvironmentVariables outer)
-        {
-            Variables = new Dictionary<string, InterpreterObject>();
-            OuterEnvironment = outer;
+        if (OuterEnvironment != null) 
+        { 
+            return OuterEnvironment.Get(key);
         }
+
+        return null;
     }
 }
