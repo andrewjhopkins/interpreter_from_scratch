@@ -1,3 +1,5 @@
+Check out this [blog post](https://www.andrewjhopkins.com/posts/interpreter_from_scratch) for details on implementation
+
 # Interpreter from Scratch
 
 A C# implementation of a simple interpreted language with JavaScript like syntax.
